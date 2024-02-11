@@ -16,7 +16,7 @@ func TestRook(t *testing.T) {
 	}
 
 	for index, d := range data {
-		if result := Rook(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
+		if result := CheckRook(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
 			t.Errorf("Index %d | result %t | expected %t", index, result, d.isValid)
 		}
 	}
@@ -46,7 +46,7 @@ func TestBishop(t *testing.T) {
 	}
 
 	for index, d := range data {
-		if result := Bishop(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
+		if result := CheckBishop(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
 			t.Errorf("Index %d | result %t | expected %t", index, result, d.isValid)
 		}
 	}
@@ -66,7 +66,7 @@ func TestKing(t *testing.T) {
 	}
 
 	for index, d := range data {
-		if result := King(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
+		if result := CheckKing(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
 			t.Errorf("Index %d | result %t | expected %t", index, result, d.isValid)
 		}
 	}
@@ -87,7 +87,7 @@ func TestKnight(t *testing.T) {
 	}
 
 	for index, d := range data {
-		if result := Knight(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
+		if result := CheckKnight(d.currentX, d.currentY, d.nextX, d.nextY); result != d.isValid {
 			t.Errorf("Index %d | result %t | expected %t", index, result, d.isValid)
 		}
 	}
@@ -95,12 +95,18 @@ func TestKnight(t *testing.T) {
 
 func Benchmark(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Knight(Generator('C'), 1, Generator('D'), 3)
+		CheckKnight(Generator('C'), 1, Generator('D'), 3)
 	}
 }
 
 func TestAbs(t *testing.T) {
 	if result := Abs(-3); result != 3 {
 		t.Errorf("expected: 3 | result: %d", result)
+	}
+}
+
+func BenchmarkPrint(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		
 	}
 }
