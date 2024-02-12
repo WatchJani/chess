@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
-	"time"
+	"root/chess"
 
 	"github.com/fasthttp/websocket"
 	"github.com/valyala/fasthttp"
@@ -33,7 +33,6 @@ func (w *WS) CreateGame(ctx *fasthttp.RequestCtx) {
 
 		w.WSCL.connectionLost[host] = make(chan struct{})
 
-		fmt.Println("conn host", host)
 		<-w.WSCL.connectionLost[host] //witch game we need to wait
 
 		fmt.Println("game host is left")
@@ -73,10 +72,12 @@ func (w *WS) JoinGame(ctx *fasthttp.RequestCtx) {
 
 		//add connection
 		fmt.Println("user connected")
-		list = append(list, c)
+		w.WSCL.CM[host] = append(w.WSCL.CM[host], c) //add connection to store
 
-		list[0].WriteMessage(websocket.TextMessage, []byte(ctx.RemoteAddr().String())) //witch messageType
-		list[1].WriteMessage(websocket.TextMessage, []byte("join the game"))
+		w.WSCL.CM[host][0].WriteMessage(websocket.TextMessage, []byte(ctx.RemoteAddr().String())) //witch messageType
+		w.WSCL.CM[host][1].WriteMessage(websocket.TextMessage, []byte("join the game"))
+
+		// w.WSCL.connectionLost[host+"1Q"] <- struct{}{}
 
 		<-w.WSCL.connectionLost[host]
 		fmt.Println("player joined left")
@@ -89,6 +90,66 @@ func (w *WS) JoinGame(ctx *fasthttp.RequestCtx) {
 		}
 		return
 	}
+}
+
+func (w *WS) CreateNewGame(host string) {
+	fmt.Println("game is initialized")
+
+	//create new game
+	game := chess.NewChess()
+
+	//kocnica
+	// w.WSCL.connectionLost[host+"1Q"] = make(chan struct{})
+	// <-w.WSCL.connectionLost[host+"1Q"]
+
+	//ne updatuje se :(
+
+	fmt.Println(w.WSCL.CM[host])
+
+	var counter int
+
+	for {
+		myConnection := w.WSCL.CM[host][counter%2]
+
+		//here wait while someone join
+		myConnection.WriteMessage(websocket.TextMessage, []byte("your turn: "))
+
+		//make move
+		for {
+			//get move from client
+			//i like handle errors :D (THAT TEST GAME)
+			_, ms, _ := myConnection.ReadMessage()
+
+			if err := game.Move(chess.Parse(ms)); err != nil {
+				log.Println(err)
+				myConnection.WriteMessage(websocket.TextMessage, []byte("wrong move or input: "))
+
+				continue
+			}
+
+			break
+		}
+
+		//check if is end of game
+		if counter == 100 {
+			//we don't play real chess
+			break
+		}
+
+		//Send to bout player same chess board
+		for _, conn := range w.WSCL.CM[host] {
+			conn.WriteMessage(websocket.TextMessage, game.Print())
+		}
+
+		// chess.Print()
+		counter++
+	}
+
+	for index := 0; index < 2; index++ {
+		w.WSCL.connectionLost[host] <- struct{}{}
+	}
+
+	fmt.Println("game end")
 }
 
 // func (w *WS) CreateGame(ctx *fasthttp.RequestCtx) {
@@ -128,13 +189,3 @@ func (w *WS) JoinGame(ctx *fasthttp.RequestCtx) {
 
 // 	//defer will be executed
 // }
-
-func (w *WS) CreateNewGame(host string) {
-	time.Sleep(15 * time.Second)
-	fmt.Println("game is initialized")
-
-	fmt.Println("game host", host)
-	for index := 0; index < 2; index++ {
-		w.WSCL.connectionLost[host] <- struct{}{}
-	}
-}

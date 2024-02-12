@@ -38,6 +38,7 @@ func NewFawn(name string, tag byte, color bool) *Fawn {
 type Chess struct {
 	move  map[string]CheckFn
 	table [][]*Fawn //for print
+	chess []byte
 }
 
 func NewChess() *Chess {
@@ -55,23 +56,31 @@ func NewChess() *Chess {
 	return &Chess{
 		move:  move,
 		table: table,
+		chess: make([]byte, 0, 72), //64 + 8 => \n
 	}
 }
 
-func (c Chess) Print() {
+// can be better, but this is test game web socket
+func (c *Chess) Print() []byte {
 	for _, column := range c.table {
 		for _, row := range column {
 			if row != nil {
-				fmt.Print(string(row.tag) + " ")
+				c.chess = append(c.chess, row.tag)
 			} else {
-				fmt.Print(" ")
+				c.chess = append(c.chess, ' ')
 			}
 		}
-		fmt.Println()
+		c.chess = append(c.chess, '\n')
 	}
+
+	return c.chess
 }
 
 func (c *Chess) Move(CurrentX, CurrentY, nextX, nextY int8) error {
+	if CurrentX > 7 || CurrentY > 7 || nextX > 7 || nextY > 7 {
+		return errors.New("This field is not exist!")
+	}
+
 	currentFawn := c.table[CurrentX][CurrentY]
 
 	//if not exist
@@ -148,7 +157,7 @@ func CheckPawn(currentX, currentY, nextX, nextY int8) bool {
 	distanceX := Abs(nextX - currentX)
 	distanceY := Abs(nextY - currentY)
 
-	return ((currentX == 6 || currentX == 1) && distanceX == 2) || distanceY == 1 || distanceY == 1 && (distanceX == 1 || distanceY == -1)
+	return ((currentX == 6 || currentX == 1) && distanceX == 2) || distanceX == 1 || distanceY == 1 && (distanceX == 1 || distanceY == -1)
 }
 
 func Abs(num int8) int8 {
@@ -161,4 +170,11 @@ func Abs(num int8) int8 {
 
 func Generator(letter byte) int8 {
 	return int8(letter - 'A')
+}
+
+func Parse(coordinates []byte) (int8, int8, int8, int8) {
+	// fmt.Println(string(coordinates))
+	// fmt.Println(Generator(coordinates[0]), int8(coordinates[1])-'0'-1, Generator(coordinates[3]), int8(coordinates[4])-1-'0')
+
+	return Generator(coordinates[0]), int8(coordinates[1]) - '0' - 1, Generator(coordinates[3]), int8(coordinates[4]) - '0' - 1
 }

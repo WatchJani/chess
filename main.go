@@ -13,9 +13,9 @@ func main() {
 
 	// chess := chess.NewChess()
 
-	// if err := chess.Move(1, 1, 2, 2); err != nil {
+	// if err := chess.Move(1, 1, 2, 1); err != nil {
 	// 	log.Println(err)
 	// }
 
-	// chess.Print()
+	// fmt.Println(string(chess.Print()))
 }
