@@ -56,21 +56,27 @@ func NewChess() *Chess {
 	return &Chess{
 		move:  move,
 		table: table,
-		chess: make([]byte, 0, 72), //64 + 8 => \n
+		chess: make([]byte, 72), //64 + 8 => \n
 	}
 }
 
 // can be better, but this is test game web socket
 func (c *Chess) Print() []byte {
-	for _, column := range c.table {
-		for _, row := range column {
+	for i, column := range c.table {
+		for j, row := range column {
 			if row != nil {
-				c.chess = append(c.chess, row.tag)
+				// c.chess = append(c.chess, row.tag)
+				c.chess[8*i+j] = row.tag
 			} else {
-				c.chess = append(c.chess, ' ')
+				// c.chess = append(c.chess, ' ')
+				c.chess[8*i+j] = ' '
 			}
 		}
-		c.chess = append(c.chess, '\n')
+	}
+
+	for i := 8; i < 72; i += 9 {
+		copy(c.chess[i+1:], c.chess[i:])
+		c.chess[i] = '\n'
 	}
 
 	return c.chess
